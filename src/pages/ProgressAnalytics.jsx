@@ -1,478 +1,518 @@
 import {
-  Activity,
-  BarChart3,
-  BookOpen,
-  Brain,
-  CalendarDays,
   CheckCircle2,
-  ChevronRight,
+  Circle,
   Code2,
-  Gauge,
   GitBranch,
-  Layers3,
-  Lightbulb,
-  Play,
+  Laptop,
   Target,
-  Terminal,
   TrendingUp,
-  Zap,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
-const ProgressAnalytics = () => {
-  const weeklyRhythm = [
-    { day: "M", value: 3 },
-    { day: "T", value: 1 },
-    { day: "W", value: 5 },
-    { day: "T", value: 2 },
-    { day: "F", value: 6 },
-    { day: "S", value: 4 },
-    { day: "S", value: 0 },
-  ];
+const Progress = () => {
+  const [questions, setQuestions] = useState(() => {
+    const savedQuestions = localStorage.getItem(
+      "interview_questions"
+    );
 
-  const domains = [
+    return savedQuestions ? JSON.parse(savedQuestions) : [];
+  });
+
+  useEffect(() => {
+    const updateQuestions = () => {
+      const savedQuestions = localStorage.getItem(
+        "interview_questions"
+      );
+
+      setQuestions(savedQuestions ? JSON.parse(savedQuestions) : []);
+    };
+
+    window.addEventListener("questionsUpdated", updateQuestions);
+
+    return () => {
+      window.removeEventListener(
+        "questionsUpdated",
+        updateQuestions
+      );
+    };
+  }, []);
+
+  /* =========================
+     OVERALL
+  ========================= */
+
+  const totalQuestions = questions.length;
+
+  const completedQuestions = questions.filter(
+    (question) => question.status === "Completed"
+  ).length;
+
+  const pendingQuestions = questions.filter(
+    (question) => question.status === "Pending"
+  ).length;
+
+  const inProgressQuestions = questions.filter(
+    (question) => question.status === "In Progress"
+  ).length;
+
+  const overallProgress =
+    totalQuestions > 0
+      ? Math.round(
+          (completedQuestions / totalQuestions) * 100
+        )
+      : 0;
+
+  /* =========================
+     CATEGORY PROGRESS
+  ========================= */
+
+  const getCategoryProgress = (category) => {
+    const categoryQuestions = questions.filter(
+      (question) => question.category === category
+    );
+
+    const completed = categoryQuestions.filter(
+      (question) => question.status === "Completed"
+    ).length;
+
+    const total = categoryQuestions.length;
+
+    const percentage =
+      total > 0
+        ? Math.round((completed / total) * 100)
+        : 0;
+
+    return {
+      total,
+      completed,
+      percentage,
+    };
+  };
+
+  const dsa = getCategoryProgress("DSA");
+  const git = getCategoryProgress("Git");
+  const technical = getCategoryProgress("Technical");
+
+  /* =========================
+     DIFFICULTY
+  ========================= */
+
+  const easyTotal = questions.filter(
+    (question) => question.difficulty === "Easy"
+  ).length;
+
+  const mediumTotal = questions.filter(
+    (question) => question.difficulty === "Medium"
+  ).length;
+
+  const hardTotal = questions.filter(
+    (question) => question.difficulty === "Hard"
+  ).length;
+
+  const easyCompleted = questions.filter(
+    (question) =>
+      question.difficulty === "Easy" &&
+      question.status === "Completed"
+  ).length;
+
+  const mediumCompleted = questions.filter(
+    (question) =>
+      question.difficulty === "Medium" &&
+      question.status === "Completed"
+  ).length;
+
+  const hardCompleted = questions.filter(
+    (question) =>
+      question.difficulty === "Hard" &&
+      question.status === "Completed"
+  ).length;
+
+  /* =========================
+     CATEGORY CARD
+  ========================= */
+
+  const categoryCards = [
     {
-      title: "Data Structures & Algorithms",
-      subtitle: "Arrays, Trees, Graphs, Dynamic Prog",
-      percentage: 70,
-      solved: "42/60 Solved",
-      icon: Layers3,
-      color: "primary",
-      easy: "18 / 18",
-      medium: "20 / 30",
-      hard: "4 / 12",
-      easyPercent: "100%",
-      mediumPercent: "66%",
-      hardPercent: "33%",
+      title: "DSA",
+      subtitle: "Data Structures & Algorithms",
+      icon: Code2,
+      completed: dsa.completed,
+      total: dsa.total,
+      percentage: dsa.percentage,
     },
     {
-      title: "Git & GitHub Workflows",
-      subtitle: "Version control & release hygiene",
-      percentage: 93,
-      solved: "14/15 Solved",
+      title: "Git",
+      subtitle: "Git & GitHub",
       icon: GitBranch,
-      color: "success",
-      tags: ["Merging & Rebasing", "Hooks", "Submodules"],
+      completed: git.completed,
+      total: git.total,
+      percentage: git.percentage,
     },
     {
-      title: "Technical Interview Concepts",
-      subtitle: "Architecture, protocols & scaling",
-      percentage: 75,
-      solved: "15/20 Solved",
-      icon: Brain,
-      color: "secondary",
-      tags: ["System Design Fundamentals", "Web Security", "Performance"],
-    },
-    {
-      title: "Machine Coding Challenges",
-      subtitle: "Time-boxed implementation tasks",
-      percentage: 33,
-      solved: "1/3 Projects",
-      icon: Terminal,
-      color: "primary",
-      tags: ["1 Done", "1 Building", "1 Queued"],
+      title: "Technical",
+      subtitle: "Full Stack Technical",
+      icon: Laptop,
+      completed: technical.completed,
+      total: technical.total,
+      percentage: technical.percentage,
     },
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
 
-      {/* =====================================================
+      {/* =========================
           HEADER
-      ====================================================== */}
-      <section className="flex items-start justify-between gap-3">
+      ========================= */}
 
-        <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--primary)]">
-            Performance Radar
-          </p>
+      <section>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          Progress
+        </h1>
 
-          <h1 className="mt-1 text-xl font-bold tracking-tight sm:text-2xl">
-            Progress & Mastery Analytics
-          </h1>
-        </div>
-
-        <button
-          type="button"
-          className="
-            flex h-10 w-10 shrink-0
-            items-center justify-center
-            rounded-xl
-            bg-[var(--surface)]
-            text-[var(--text-muted)]
-            transition
-            hover:bg-[var(--surface-hover)]
-            hover:text-[var(--text)]
-          "
-        >
-          <BarChart3 size={18} />
-        </button>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          Track your interview preparation progress.
+        </p>
       </section>
 
-      {/* =====================================================
-          TIME FILTER
-      ====================================================== */}
-      <div className="grid grid-cols-3 gap-1 rounded-lg bg-[var(--surface)] p-1">
+      {/* =========================
+          OVERALL PROGRESS
+      ========================= */}
 
-        {["All Time", "This Month", "This Week"].map(
-          (item, index) => (
-            <button
-              key={item}
-              type="button"
-              className={`
-                rounded-md px-3 py-2
-                font-mono text-[10px]
-                transition
-
-                ${
-                  index === 0
-                    ? "bg-[var(--surface-hover)] text-[var(--text)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text)]"
-                }
-              `}
-            >
-              {item}
-            </button>
-          )
-        )}
-      </div>
-
-      {/* =====================================================
-          FOCUS RECOMMENDATION
-      ====================================================== */}
       <section
         className="
-          rounded-xl
+          rounded-2xl
           border border-[var(--border)]
           bg-[var(--surface)]
-          p-3
+          p-5
+          sm:p-6
         "
       >
-        <div className="flex gap-3">
+
+        <div className="flex flex-col items-center gap-6 sm:flex-row">
+
+          {/* CIRCLE */}
 
           <div
             className="
-              flex h-9 w-9 shrink-0
-              items-center justify-center
-              rounded-lg
-              bg-[var(--surface-hover)]
-              text-[var(--secondary)]
-            "
-          >
-            <Lightbulb size={18} />
-          </div>
-
-          <div className="min-w-0 flex-1">
-
-            <div className="flex flex-wrap items-center gap-2">
-
-              <span
-                className="
-                  rounded
-                  bg-[var(--secondary)]/15
-                  px-2 py-1
-                  font-mono text-[9px]
-                  font-semibold
-                  text-[var(--secondary)]
-                "
-              >
-                FOCUS RECOMMENDED
-              </span>
-
-              <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                Next Gap
-              </span>
-            </div>
-
-            <h2 className="mt-1 text-sm font-semibold">
-              Hard Graph & System Design Scaling
-            </h2>
-
-            <p className="mt-1 text-[10px] leading-relaxed text-[var(--text-muted)]">
-              Target 3 problems this week to balance weak
-              algorithmic edge cases.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* =====================================================
-          MASTERY GAUGE
-      ====================================================== */}
-      <section
-        className="
-          rounded-xl
-          border border-[var(--border)]
-          bg-[var(--surface)]
-          p-4
-        "
-      >
-        <div className="flex items-center justify-between">
-
-          <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-muted)]">
-            Mastery Gauge
-          </p>
-
-          <span
-            className="
-              rounded-full
-              bg-[var(--success)]/15
-              px-2.5 py-1
-              font-mono text-[9px]
-              text-[var(--success)]
-            "
-          >
-            Target: 80% L6
-          </span>
-        </div>
-
-        <div className="mt-4 flex items-center gap-4">
-
-          {/* Circular progress */}
-          <div
-            className="
-              relative flex h-28 w-28 shrink-0
+              relative
+              flex h-40 w-40
+              shrink-0
               items-center justify-center
               rounded-full
             "
             style={{
-              background:
-                "conic-gradient(var(--primary) 68%, var(--surface-hover) 68%)",
+              background: `conic-gradient(
+                var(--primary) ${overallProgress}%,
+                var(--surface-hover) ${overallProgress}%
+              )`,
             }}
           >
+
             <div
               className="
-                absolute inset-[9px]
+                absolute inset-[10px]
                 flex flex-col
                 items-center justify-center
                 rounded-full
                 bg-[var(--surface)]
               "
             >
-              <span className="text-xl font-bold">
-                68%
+
+              <span className="text-3xl font-bold">
+                {overallProgress}%
               </span>
 
-              <span className="font-mono text-[8px] text-[var(--text-muted)]">
-                Solved
-              </span>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="min-w-0 flex-1">
-
-            <div className="flex items-end gap-1">
-              <span className="text-2xl font-bold">
-                57
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
+                Overall
               </span>
 
-              <span className="mb-1 font-mono text-[10px] text-[var(--text-muted)]">
-                / 84 total
-              </span>
             </div>
 
-            <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
-              Pacing ahead of 84% of senior candidate benchmarks.
-            </p>
-
-            <p className="mt-2 flex items-center gap-1 font-mono text-[9px] text-[var(--success)]">
-              <TrendingUp size={11} />
-              Interview ready trajectory
-            </p>
           </div>
+
+          {/* INFO */}
+
+          <div className="flex-1 text-center sm:text-left">
+
+            <div className="flex items-center justify-center gap-2 sm:justify-start">
+
+              <Target
+                size={20}
+                className="text-[var(--primary)]"
+              />
+
+              <h2 className="text-xl font-bold">
+                Interview Preparation
+              </h2>
+
+            </div>
+
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
+              You have completed{" "}
+              <span className="font-semibold text-[var(--text)]">
+                {completedQuestions}
+              </span>{" "}
+              out of{" "}
+              <span className="font-semibold text-[var(--text)]">
+                {totalQuestions}
+              </span>{" "}
+              questions.
+            </p>
+
+            <div className="mt-4 flex flex-wrap justify-center gap-3 sm:justify-start">
+
+              <div className="rounded-lg bg-[var(--success)]/10 px-3 py-2">
+                <p className="font-mono text-[10px] text-[var(--text-muted)]">
+                  COMPLETED
+                </p>
+
+                <p className="text-lg font-bold text-[var(--success)]">
+                  {completedQuestions}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-[var(--secondary)]/10 px-3 py-2">
+                <p className="font-mono text-[10px] text-[var(--text-muted)]">
+                  IN PROGRESS
+                </p>
+
+                <p className="text-lg font-bold text-[var(--secondary)]">
+                  {inProgressQuestions}
+                </p>
+              </div>
+
+              <div className="rounded-lg bg-[var(--surface-hover)] px-3 py-2">
+                <p className="font-mono text-[10px] text-[var(--text-muted)]">
+                  PENDING
+                </p>
+
+                <p className="text-lg font-bold">
+                  {pendingQuestions}
+                </p>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
 
-        {/* Gauge stats */}
-        <div className="mt-5 grid grid-cols-3 border-t border-[var(--border)] pt-4">
-
-          <Metric
-            icon={Activity}
-            label="Avg Time"
-            value="24m"
-            extra="-3m vs avg"
-          />
-
-          <Metric
-            icon={Target}
-            label="Retention"
-            value="92%"
-            extra="SRC cycle 3"
-          />
-
-          <Metric
-            icon={Zap}
-            label="Velocity"
-            value="+14"
-            extra="This week"
-          />
-
-        </div>
       </section>
 
-      {/* =====================================================
-          WEEKLY RHYTHM
-      ====================================================== */}
-      <section
-        className="
-          rounded-xl
-          border border-[var(--border)]
-          bg-[var(--surface)]
-          p-4
-        "
-      >
-        <div className="flex items-center justify-between">
+      {/* =========================
+          CATEGORY PROGRESS
+      ========================= */}
 
-          <div className="flex items-center gap-2">
-            <CalendarDays
-              size={16}
-              className="text-[var(--text-muted)]"
-            />
+      <section>
 
-            <h2 className="text-sm font-semibold">
-              Weekly Rhythm
-            </h2>
-          </div>
+        <div className="mb-3 flex items-center gap-2">
+          <TrendingUp
+            size={18}
+            className="text-[var(--primary)]"
+          />
 
-          <span className="font-mono text-[9px] text-[var(--text-muted)]">
-            Mon - Sun
-          </span>
+          <h2 className="text-lg font-semibold">
+            Category Progress
+          </h2>
         </div>
 
-        <div className="mt-4 grid grid-cols-7 gap-2">
+        <div className="grid gap-4 lg:grid-cols-3">
 
-          {weeklyRhythm.map((item, index) => {
-            const max = 6;
-            const height = Math.max(
-              10,
-              (item.value / max) * 100
-            );
+          {categoryCards.map((category) => {
+
+            const Icon = category.icon;
 
             return (
               <div
-                key={`${item.day}-${index}`}
-                className="flex flex-col items-center gap-2"
+                key={category.title}
+                className="
+                  rounded-2xl
+                  border border-[var(--border)]
+                  bg-[var(--surface)]
+                  p-5
+                "
               >
-                <div className="flex h-20 items-end">
 
-                  <div
-                    className={`
-                      flex w-7
-                      items-center justify-center
-                      rounded-md
-                      font-mono text-[8px]
-                      ${
-                        index === 4
-                          ? "bg-[var(--primary)] text-[var(--bg)]"
-                          : "bg-[var(--surface-hover)] text-[var(--text-muted)]"
-                      }
-                    `}
-                    style={{
-                      height: `${height}%`,
-                    }}
-                  >
-                    {item.value}
+                <div className="flex items-center justify-between">
+
+                  <div className="flex items-center gap-3">
+
+                    <div
+                      className="
+                        flex h-10 w-10
+                        items-center justify-center
+                        rounded-xl
+                        bg-[var(--surface-hover)]
+                        text-[var(--primary)]
+                      "
+                    >
+                      <Icon size={19} />
+                    </div>
+
+                    <div>
+
+                      <h3 className="font-semibold">
+                        {category.title}
+                      </h3>
+
+                      <p className="font-mono text-[9px] text-[var(--text-muted)]">
+                        {category.subtitle}
+                      </p>
+
+                    </div>
+
                   </div>
+
+                  <span className="font-mono text-sm font-bold text-[var(--success)]">
+                    {category.percentage}%
+                  </span>
+
                 </div>
 
-                <span className="font-mono text-[9px] text-[var(--text-muted)]">
-                  {item.day}
-                </span>
+                {/* PROGRESS BAR */}
+
+                <div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+
+                  <div
+                    className="h-full rounded-full bg-[var(--primary)] transition-all duration-500"
+                    style={{
+                      width: `${category.percentage}%`,
+                    }}
+                  />
+
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+
+                  <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                    {category.completed} completed
+                  </span>
+
+                  <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                    {category.total} total
+                  </span>
+
+                </div>
+
               </div>
             );
           })}
+
         </div>
 
-        <div className="mt-3 flex justify-end gap-3 font-mono text-[8px] text-[var(--text-muted)]">
-          <span className="flex items-center gap-1">
-            <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-            Unbroken streak
-          </span>
-
-          <span>Less</span>
-
-          <span>More</span>
-        </div>
       </section>
 
-      {/* =====================================================
-          DOMAIN BREAKDOWN HEADER
-      ====================================================== */}
-      <section>
+      {/* =========================
+          DIFFICULTY PROGRESS
+      ========================= */}
 
-        <div className="mb-3 flex items-center justify-between">
-
-          <h2 className="text-base font-semibold">
-            Domain Breakdown
-          </h2>
-
-          <span className="font-mono text-[9px] text-[var(--text-muted)]">
-            4 Tracks Active
-          </span>
-        </div>
-
-        <div className="space-y-3">
-
-          {domains.map((domain) => (
-            <DomainCard
-              key={domain.title}
-              domain={domain}
-            />
-          ))}
-
-        </div>
-      </section>
-
-      {/* =====================================================
-          NEXT IN QUEUE
-      ====================================================== */}
       <section
         className="
-          flex items-center gap-3
-          rounded-xl
+          rounded-2xl
           border border-[var(--border)]
           bg-[var(--surface)]
-          p-3
+          p-5
+          sm:p-6
         "
       >
-        <div
-          className="
-            flex h-9 w-9 shrink-0
-            items-center justify-center
-            rounded-lg
-            bg-[var(--primary)]
-            text-[var(--bg)]
-          "
-        >
-          <Play size={17} fill="currentColor" />
+
+        <h2 className="text-lg font-semibold">
+          Difficulty Progress
+        </h2>
+
+        <div className="mt-5 space-y-5">
+
+          {/* EASY */}
+
+          <ProgressRow
+            label="Easy"
+            completed={easyCompleted}
+            total={easyTotal}
+            percentage={
+              easyTotal > 0
+                ? Math.round(
+                    (easyCompleted / easyTotal) * 100
+                  )
+                : 0
+            }
+            dotClass="bg-[var(--success)]"
+            textClass="text-[var(--success)]"
+          />
+
+          {/* MEDIUM */}
+
+          <ProgressRow
+            label="Medium"
+            completed={mediumCompleted}
+            total={mediumTotal}
+            percentage={
+              mediumTotal > 0
+                ? Math.round(
+                    (mediumCompleted / mediumTotal) * 100
+                  )
+                : 0
+            }
+            dotClass="bg-[var(--secondary)]"
+            textClass="text-[var(--secondary)]"
+          />
+
+          {/* HARD */}
+
+          <ProgressRow
+            label="Hard"
+            completed={hardCompleted}
+            total={hardTotal}
+            percentage={
+              hardTotal > 0
+                ? Math.round(
+                    (hardCompleted / hardTotal) * 100
+                  )
+                : 0
+            }
+            dotClass="bg-red-400"
+            textClass="text-red-400"
+          />
+
         </div>
 
-        <div className="min-w-0 flex-1">
+      </section>
 
-          <p className="font-mono text-[8px] uppercase tracking-wider text-[var(--text-muted)]">
-            Next in Queue
-          </p>
+      {/* =========================
+          STATUS
+      ========================= */}
 
-          <h3 className="truncate text-sm font-semibold">
-            Alien Dictionary (Topological Sort)
-          </h3>
+      <section>
+
+        <h2 className="mb-3 text-lg font-semibold">
+          Question Status
+        </h2>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+
+          <StatusCard
+            title="Completed"
+            value={completedQuestions}
+            icon={CheckCircle2}
+            className="text-[var(--success)]"
+          />
+
+          <StatusCard
+            title="In Progress"
+            value={inProgressQuestions}
+            icon={Circle}
+            className="text-[var(--secondary)]"
+          />
+
+          <StatusCard
+            title="Pending"
+            value={pendingQuestions}
+            icon={Circle}
+            className="text-[var(--text-muted)]"
+          />
+
         </div>
 
-        <button
-          type="button"
-          className="
-            shrink-0
-            rounded-lg
-            bg-[var(--primary)]
-            px-3 py-2
-            font-mono text-[9px]
-            font-semibold
-            text-[var(--bg)]
-            transition
-            hover:opacity-90
-          "
-        >
-          Solve
-        </button>
       </section>
 
     </div>
@@ -481,209 +521,109 @@ const ProgressAnalytics = () => {
 
 
 /* =========================================================
-   METRIC
+   PROGRESS ROW
 ========================================================= */
 
-const Metric = ({
-  icon: Icon,
+const ProgressRow = ({
   label,
-  value,
-  extra,
+  completed,
+  total,
+  percentage,
+  dotClass,
+  textClass,
 }) => {
   return (
-    <div className="text-center">
+    <div>
 
-      <div className="flex items-center justify-center gap-1">
-        <Icon
-          size={10}
-          className="text-[var(--secondary)]"
-        />
+      <div className="mb-2 flex items-center justify-between">
 
-        <p className="font-mono text-[8px] text-[var(--text-muted)]">
-          {label}
-        </p>
+        <div className="flex items-center gap-2">
+
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${dotClass}`}
+          />
+
+          <span className="text-sm font-medium">
+            {label}
+          </span>
+
+        </div>
+
+        <span
+          className={`font-mono text-xs font-semibold ${textClass}`}
+        >
+          {completed}/{total}
+        </span>
+
       </div>
 
-      <p className="mt-1 text-sm font-bold">
-        {value}
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+
+        <div
+          className={`h-full rounded-full ${dotClass} transition-all duration-500`}
+          style={{
+            width: `${percentage}%`,
+          }}
+        />
+
+      </div>
+
+      <p className="mt-1 font-mono text-[9px] text-[var(--text-muted)]">
+        {percentage}% completed
       </p>
 
-      <p className="font-mono text-[7px] text-[var(--success)]">
-        {extra}
-      </p>
     </div>
   );
 };
 
 
 /* =========================================================
-   DOMAIN CARD
+   STATUS CARD
 ========================================================= */
 
-const DomainCard = ({ domain }) => {
-  const Icon = domain.icon;
-
-  const progressColor = {
-    primary: "bg-[var(--primary)]",
-    success: "bg-[var(--success)]",
-    secondary: "bg-[var(--secondary)]",
-  };
-
-  const iconColor = {
-    primary: "text-[var(--primary)] bg-[var(--primary)]/15",
-    success: "text-[var(--success)] bg-[var(--success)]/15",
-    secondary: "text-[var(--secondary)] bg-[var(--secondary)]/15",
-  };
-
+const StatusCard = ({
+  title,
+  value,
+  icon: Icon,
+  className,
+}) => {
   return (
     <div
       className="
+        flex items-center gap-3
         rounded-xl
         border border-[var(--border)]
         bg-[var(--surface)]
         p-4
       "
     >
-      {/* Header */}
-      <div className="flex items-start gap-3">
 
-        <div
-          className={`
-            flex h-9 w-9 shrink-0
-            items-center justify-center
-            rounded-lg
-            ${iconColor[domain.color]}
-          `}
-        >
-          <Icon size={17} />
-        </div>
-
-        <div className="min-w-0 flex-1">
-
-          <div className="flex items-start justify-between gap-3">
-
-            <div>
-              <h3 className="text-sm font-semibold">
-                {domain.title}
-              </h3>
-
-              <p className="mt-0.5 text-[9px] text-[var(--text-muted)]">
-                {domain.subtitle}
-              </p>
-            </div>
-
-            <div className="shrink-0 text-right">
-
-              <p className="text-lg font-bold">
-                {domain.percentage}%
-              </p>
-
-              <p className="font-mono text-[8px] text-[var(--text-muted)]">
-                {domain.solved}
-              </p>
-            </div>
-
-          </div>
-        </div>
+      <div
+        className={`
+          flex h-10 w-10
+          items-center justify-center
+          rounded-lg
+          bg-[var(--surface-hover)]
+          ${className}
+        `}
+      >
+        <Icon size={19} />
       </div>
 
-      {/* Progress */}
-      <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
-        <div
-          className={`h-full rounded-full ${progressColor[domain.color]}`}
-          style={{
-            width: `${domain.percentage}%`,
-          }}
-        />
+      <div>
+
+        <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
+          {title}
+        </p>
+
+        <p className="text-xl font-bold">
+          {value}
+        </p>
+
       </div>
 
-      {/* DSA stats */}
-      {domain.easy && (
-        <div className="mt-3 grid grid-cols-3 gap-2">
-
-          <SmallProgress
-            label="Easy"
-            value={domain.easy}
-            percentage={domain.easyPercent}
-            color="text-[var(--success)]"
-          />
-
-          <SmallProgress
-            label="Medium"
-            value={domain.medium}
-            percentage={domain.mediumPercent}
-            color="text-[var(--secondary)]"
-          />
-
-          <SmallProgress
-            label="Hard"
-            value={domain.hard}
-            percentage={domain.hardPercent}
-            color="text-red-300"
-          />
-
-        </div>
-      )}
-
-      {/* Tags */}
-      {domain.tags && (
-        <div className="mt-3 flex flex-wrap gap-x-3 gap-y-2">
-
-          {domain.tags.map((tag) => (
-            <span
-              key={tag}
-              className="
-                flex items-center gap-1
-                font-mono text-[8px]
-                text-[var(--text-muted)]
-              "
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-              {tag}
-            </span>
-          ))}
-
-        </div>
-      )}
     </div>
   );
 };
 
-
-/* =========================================================
-   SMALL PROGRESS
-========================================================= */
-
-const SmallProgress = ({
-  label,
-  value,
-  percentage,
-  color,
-}) => {
-  return (
-    <div
-      className="
-        rounded-lg
-        bg-[var(--bg)]
-        p-2
-      "
-    >
-      <div className="flex items-center justify-between">
-
-        <span className={`font-mono text-[8px] ${color}`}>
-          {label}
-        </span>
-
-        <span className={`font-mono text-[8px] ${color}`}>
-          {percentage}
-        </span>
-      </div>
-
-      <p className="mt-1 font-mono text-[8px] text-[var(--text-muted)]">
-        {value}
-      </p>
-    </div>
-  );
-};
-
-export default ProgressAnalytics;
+export default Progress;

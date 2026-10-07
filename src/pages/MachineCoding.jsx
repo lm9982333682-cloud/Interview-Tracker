@@ -1,87 +1,173 @@
 import {
-  ArrowUpRight,
-  CalendarDays,
   CheckCircle2,
-  Clock3,
+  Circle,
   Code2,
-  ExternalLink,
-  Filter,
-  FolderCode,
   GitBranch,
-  MoreVertical,
-  Play,
-  Plus,
+  Laptop,
   Search,
-  Terminal,
-  Timer,
-  Trophy,
-  Users,
-  X,
+  Target,
 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 const MachineCoding = () => {
+  const [questions, setQuestions] = useState(() => {
+    const savedQuestions = localStorage.getItem(
+      "interview_questions"
+    );
+
+    return savedQuestions ? JSON.parse(savedQuestions) : [];
+  });
+
+  const [search, setSearch] = useState("");
+
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
+
+  useEffect(() => {
+    const updateQuestions = () => {
+      const savedQuestions = localStorage.getItem(
+        "interview_questions"
+      );
+
+      setQuestions(savedQuestions ? JSON.parse(savedQuestions) : []);
+    };
+
+    window.addEventListener("questionsUpdated", updateQuestions);
+
+    return () => {
+      window.removeEventListener(
+        "questionsUpdated",
+        updateQuestions
+      );
+    };
+  }, []);
+
+  /* =========================================================
+     CATEGORY DATA
+  ========================================================= */
+
+  const getCategoryData = (category) => {
+    const categoryQuestions = questions.filter(
+      (question) => question.category === category
+    );
+
+    const completed = categoryQuestions.filter(
+      (question) => question.status === "Completed"
+    ).length;
+
+    const inProgress = categoryQuestions.filter(
+      (question) => question.status === "In Progress"
+    ).length;
+
+    const pending = categoryQuestions.filter(
+      (question) => question.status === "Pending"
+    ).length;
+
+    const total = categoryQuestions.length;
+
+    const percentage =
+      total > 0
+        ? Math.round((completed / total) * 100)
+        : 0;
+
+    return {
+      total,
+      completed,
+      inProgress,
+      pending,
+      percentage,
+    };
+  };
+
+  const dsa = getCategoryData("DSA");
+
+  const git = getCategoryData("Git");
+
+  const technical = getCategoryData("Technical");
+
+  /* =========================================================
+     SEARCH + FILTER
+  ========================================================= */
+
+  const filteredQuestions = useMemo(() => {
+    const searchText = search.toLowerCase().trim();
+
+    return questions.filter((question) => {
+      const matchesSearch =
+        question.title
+          .toLowerCase()
+          .includes(searchText) ||
+        question.description
+          ?.toLowerCase()
+          .includes(searchText) ||
+        question.category
+          .toLowerCase()
+          .includes(searchText);
+
+      const matchesCategory =
+        selectedCategory === "All" ||
+        question.category === selectedCategory;
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [questions, search, selectedCategory]);
+
+  /* =========================================================
+     TOTALS
+  ========================================================= */
+
+  const totalQuestions = questions.length;
+
+  const completedQuestions = questions.filter(
+    (question) => question.status === "Completed"
+  ).length;
+
+  const inProgressQuestions = questions.filter(
+    (question) => question.status === "In Progress"
+  ).length;
+
+  const pendingQuestions = questions.filter(
+    (question) => question.status === "Pending"
+  ).length;
+
+  const overallProgress =
+    totalQuestions > 0
+      ? Math.round(
+          (completedQuestions / totalQuestions) * 100
+        )
+      : 0;
+
+  /* =========================================================
+     PROJECT DATA
+  ========================================================= */
+
   const projects = [
     {
       title: "Interview Practice Tracker",
       description:
-        "Build a complete interview preparation dashboard with question tracking and analytics.",
+        "Build a responsive interview preparation tracker using React and LocalStorage.",
       status: "In Progress",
-      progress: 68,
-      difficulty: "Hard",
-      duration: "3h 00m",
-      date: "Oct 26, 2024",
-      category: "Frontend + State",
-      tags: ["React", "Tailwind", "Charts"],
-      color: "primary",
+      icon: Laptop,
+      progress: 70,
+      tags: ["React", "LocalStorage", "Tailwind"],
     },
     {
-      title: "Kanban Task Manager",
+      title: "Kanban Interview Board",
       description:
-        "Create a drag-and-drop task management application with filtering and persistent state.",
-      status: "Completed",
-      progress: 100,
-      difficulty: "Medium",
-      duration: "2h 30m",
-      date: "Oct 21, 2024",
-      category: "Frontend",
-      tags: ["React", "DnD", "LocalStorage"],
-      color: "success",
-    },
-    {
-      title: "Real-time Chat Application",
-      description:
-        "Build a real-time chat interface with rooms, online users and message history.",
-      status: "Queued",
+        "Practice machine coding by building a drag-and-drop style task board.",
+      status: "Pending",
+      icon: Code2,
       progress: 0,
-      difficulty: "Hard",
-      duration: "3h 00m",
-      date: "Oct 28, 2024",
-      category: "Full Stack",
-      tags: ["Node", "Socket.io", "MongoDB"],
-      color: "secondary",
-    },
-  ];
-
-  const stats = [
-    {
-      label: "Projects",
-      value: "3",
-      icon: FolderCode,
+      tags: ["React", "UI", "State"],
     },
     {
-      label: "Completed",
-      value: "1",
-      icon: CheckCircle2,
-    },
-    {
-      label: "Avg. Time",
-      value: "2h 42m",
-      icon: Clock3,
-    },
-    {
-      label: "Success Rate",
-      value: "92%",
-      icon: Trophy,
+      title: "Git Workflow Simulator",
+      description:
+        "Practice Git branching, conflicts and pull request workflow concepts.",
+      status: "Pending",
+      icon: GitBranch,
+      progress: 0,
+      tags: ["Git", "GitHub", "Workflow"],
     },
   ];
 
@@ -91,430 +177,410 @@ const MachineCoding = () => {
       {/* =====================================================
           HEADER
       ====================================================== */}
-      <section className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 
-        <div>
-          <div className="flex items-center gap-2">
-            <Terminal
-              size={17}
+      <section>
+
+        <div className="flex items-start justify-between gap-4">
+
+          <div>
+
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+              Machine Coding
+            </h1>
+
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              Practice real-world frontend coding problems.
+            </p>
+
+          </div>
+
+          <div
+            className="
+              hidden
+              items-center gap-2
+              rounded-full
+              bg-[var(--surface)]
+              px-4 py-2
+              sm:flex
+            "
+          >
+
+            <Target
+              size={15}
               className="text-[var(--primary)]"
             />
 
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--primary)]">
-              Machine Coding Lab
-            </p>
-          </div>
-
-          <h1 className="mt-2 text-2xl font-bold tracking-tight sm:text-3xl">
-            Machine Coding
-          </h1>
-
-          <p className="mt-1 max-w-xl text-sm text-[var(--text-muted)]">
-            Practice building production-ready interfaces under
-            real interview time constraints.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          className="
-            flex w-fit items-center gap-2
-            rounded-xl
-            bg-[var(--primary)]
-            px-4 py-3
-            text-sm font-semibold
-            text-[var(--bg)]
-            transition
-            hover:opacity-90
-            active:scale-95
-          "
-        >
-          <Plus size={18} />
-          New Challenge
-        </button>
-      </section>
-
-      {/* =====================================================
-          STATS
-      ====================================================== */}
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-
-        {stats.map((stat) => {
-          const Icon = stat.icon;
-
-          return (
-            <div
-              key={stat.label}
-              className="
-                rounded-xl
-                border border-[var(--border)]
-                bg-[var(--surface)]
-                p-4
-              "
-            >
-              <div className="flex items-center justify-between">
-
-                <p className="font-mono text-[10px] uppercase tracking-wider text-[var(--text-muted)]">
-                  {stat.label}
-                </p>
-
-                <Icon
-                  size={17}
-                  className="text-[var(--secondary)]"
-                />
-              </div>
-
-              <p className="mt-3 text-xl font-bold sm:text-2xl">
-                {stat.value}
-              </p>
-            </div>
-          );
-        })}
-      </section>
-
-      {/* =====================================================
-          ACTIVE CHALLENGE
-      ====================================================== */}
-      <section
-        className="
-          overflow-hidden
-          rounded-2xl
-          border border-[var(--border)]
-          bg-[var(--surface)]
-        "
-      >
-        <div className="border-b border-[var(--border)] p-4 sm:p-5">
-
-          <div className="flex items-center justify-between gap-3">
-
-            <div className="flex items-center gap-2">
-
-              <span
-                className="
-                  flex h-8 w-8
-                  items-center justify-center
-                  rounded-lg
-                  bg-[var(--primary)]/15
-                  text-[var(--primary)]
-                "
-              >
-                <Play size={15} fill="currentColor" />
-              </span>
-
-              <div>
-                <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--primary)]">
-                  Active Challenge
-                </p>
-
-                <h2 className="text-sm font-semibold">
-                  Interview Practice Tracker
-                </h2>
-              </div>
-            </div>
-
-            <span
-              className="
-                rounded-full
-                bg-[var(--secondary)]/15
-                px-2.5 py-1
-                font-mono text-[9px]
-                text-[var(--secondary)]
-              "
-            >
-              01:42:18
+            <span className="font-mono text-[10px] text-[var(--text-muted)]">
+              {overallProgress}% Complete
             </span>
+
           </div>
+
         </div>
 
-        <div className="p-4 sm:p-5">
-
-          <div className="flex flex-col gap-5 lg:flex-row">
-
-            <div className="min-w-0 flex-1">
-
-              <div className="flex flex-wrap gap-2">
-                <span
-                  className="
-                    rounded
-                    bg-[var(--primary)]/15
-                    px-2.5 py-1
-                    font-mono text-[9px]
-                    text-[var(--primary)]
-                  "
-                >
-                  React
-                </span>
-
-                <span
-                  className="
-                    rounded
-                    bg-[var(--surface-hover)]
-                    px-2.5 py-1
-                    font-mono text-[9px]
-                    text-[var(--text-muted)]
-                  "
-                >
-                  Tailwind
-                </span>
-
-                <span
-                  className="
-                    rounded
-                    bg-red-400/15
-                    px-2.5 py-1
-                    font-mono text-[9px]
-                    text-red-300
-                  "
-                >
-                  Hard
-                </span>
-              </div>
-
-              <h3 className="mt-3 text-xl font-bold">
-                Build an Interview Practice Tracker
-              </h3>
-
-              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[var(--text-muted)]">
-                Create a responsive dashboard where candidates can
-                track DSA questions, Git tasks, technical concepts
-                and machine coding challenges.
-              </p>
-
-              {/* Progress */}
-              <div className="mt-5">
-
-                <div className="mb-2 flex items-center justify-between">
-
-                  <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-muted)]">
-                    Implementation Progress
-                  </span>
-
-                  <span className="font-mono text-xs font-semibold text-[var(--primary)]">
-                    68%
-                  </span>
-                </div>
-
-                <div className="h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
-                  <div
-                    className="h-full rounded-full bg-[var(--primary)]"
-                    style={{ width: "68%" }}
-                  />
-                </div>
-              </div>
-
-              {/* Metadata */}
-              <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-
-                <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-                  <Timer size={12} />
-                  3 hour limit
-                </span>
-
-                <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-                  <GitBranch size={12} />
-                  4 commits
-                </span>
-
-                <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-                  <Users size={12} />
-                  Solo
-                </span>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex shrink-0 flex-row gap-2 lg:flex-col">
-
-              <button
-                type="button"
-                className="
-                  flex flex-1 items-center justify-center gap-2
-                  rounded-xl
-                  bg-[var(--primary)]
-                  px-4 py-3
-                  text-xs font-semibold
-                  text-[var(--bg)]
-                  transition
-                  hover:opacity-90
-                  lg:flex-none
-                "
-              >
-                <Play size={15} fill="currentColor" />
-                Continue
-              </button>
-
-              <button
-                type="button"
-                className="
-                  flex flex-1 items-center justify-center gap-2
-                  rounded-xl
-                  border border-[var(--border)]
-                  bg-[var(--bg)]
-                  px-4 py-3
-                  text-xs font-medium
-                  text-[var(--text)]
-                  transition
-                  hover:bg-[var(--surface-hover)]
-                  lg:flex-none
-                "
-              >
-                <ExternalLink size={14} />
-                Open Project
-              </button>
-
-            </div>
-          </div>
-        </div>
       </section>
 
       {/* =====================================================
-          SEARCH + FILTER
+          MACHINE CODING PROJECTS
       ====================================================== */}
-      <section className="flex flex-col gap-3 sm:flex-row">
 
-        <div
-          className="
-            flex flex-1 items-center gap-3
-            rounded-xl
-            border border-[var(--border)]
-            bg-[var(--surface)]
-            px-4 py-3
-          "
-        >
-          <Search
-            size={18}
-            className="text-[var(--text-muted)]"
-          />
-
-          <input
-            type="text"
-            placeholder="Search coding challenges..."
-            className="
-              min-w-0 flex-1
-              bg-transparent
-              text-sm
-              outline-none
-              placeholder:text-[var(--text-muted)]
-            "
-          />
-
-          <kbd
-            className="
-              hidden sm:flex
-              h-6 min-w-6
-              items-center justify-center
-              rounded
-              bg-[var(--bg)]
-              px-1.5
-              font-mono text-[9px]
-              text-[var(--text-muted)]
-            "
-          >
-            /
-          </kbd>
-        </div>
-
-        <button
-          type="button"
-          className="
-            flex items-center justify-center gap-2
-            rounded-xl
-            border border-[var(--border)]
-            bg-[var(--surface)]
-            px-4 py-3
-            font-mono text-xs
-            text-[var(--text-muted)]
-            transition
-            hover:bg-[var(--surface-hover)]
-            hover:text-[var(--text)]
-          "
-        >
-          <Filter size={15} />
-          Filter
-        </button>
-      </section>
-
-      {/* =====================================================
-          CHALLENGES
-      ====================================================== */}
       <section>
 
         <div className="mb-3 flex items-center justify-between">
 
-          <div>
-            <h2 className="text-base font-semibold">
-              Coding Challenges
-            </h2>
+          <h2 className="text-lg font-semibold">
+            Projects
+          </h2>
 
-            <p className="font-mono text-[9px] text-[var(--text-muted)]">
-              3 challenges in your queue
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className="
-              font-mono text-[10px]
-              text-[var(--primary)]
-            "
-          >
-            View All
-          </button>
-        </div>
-
-        <div className="space-y-3">
-
-          {projects.map((project) => (
-            <ProjectCard
-              key={project.title}
-              project={project}
-            />
-          ))}
+          <span className="font-mono text-[10px] text-[var(--text-muted)]">
+            1 / {projects.length} In Progress
+          </span>
 
         </div>
+
+        <div className="grid gap-4 lg:grid-cols-3">
+
+          {projects.map((project) => {
+
+            const Icon = project.icon;
+
+            return (
+              <div
+                key={project.title}
+                className="
+                  rounded-2xl
+                  border border-[var(--border)]
+                  bg-[var(--surface)]
+                  p-5
+                "
+              >
+
+                {/* TOP */}
+
+                <div className="flex items-start justify-between gap-3">
+
+                  <div
+                    className="
+                      flex h-10 w-10
+                      items-center justify-center
+                      rounded-xl
+                      bg-[var(--surface-hover)]
+                      text-[var(--primary)]
+                    "
+                  >
+                    <Icon size={20} />
+                  </div>
+
+                  <span
+                    className={`
+                      rounded-full
+                      px-2.5 py-1
+                      font-mono text-[9px]
+
+                      ${
+                        project.status === "In Progress"
+                          ? `
+                            bg-[var(--secondary)]/15
+                            text-[var(--secondary)]
+                          `
+                          : `
+                            bg-[var(--surface-hover)]
+                            text-[var(--text-muted)]
+                          `
+                      }
+                    `}
+                  >
+                    {project.status}
+                  </span>
+
+                </div>
+
+                {/* TITLE */}
+
+                <h3 className="mt-4 text-base font-semibold">
+                  {project.title}
+                </h3>
+
+                {/* DESCRIPTION */}
+
+                <p className="mt-2 min-h-[40px] text-xs leading-relaxed text-[var(--text-muted)]">
+                  {project.description}
+                </p>
+
+                {/* TAGS */}
+
+                <div className="mt-4 flex flex-wrap gap-1.5">
+
+                  {project.tags.map((tag) => (
+                    <span
+                      key={tag}
+                      className="
+                        rounded
+                        bg-[var(--surface-hover)]
+                        px-2 py-1
+                        font-mono text-[9px]
+                        text-[var(--text-muted)]
+                      "
+                    >
+                      {tag}
+                    </span>
+                  ))}
+
+                </div>
+
+                {/* PROGRESS */}
+
+                <div className="mt-5">
+
+                  <div className="mb-1.5 flex items-center justify-between">
+
+                    <span className="font-mono text-[9px] text-[var(--text-muted)]">
+                      Progress
+                    </span>
+
+                    <span className="font-mono text-[9px] text-[var(--text)]">
+                      {project.progress}%
+                    </span>
+
+                  </div>
+
+                  <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+
+                    <div
+                      className="h-full rounded-full bg-[var(--primary)]"
+                      style={{
+                        width: `${project.progress}%`,
+                      }}
+                    />
+
+                  </div>
+
+                </div>
+
+              </div>
+            );
+          })}
+
+        </div>
+
       </section>
 
       {/* =====================================================
-          INTERVIEW TIPS
+          QUESTION STATS
       ====================================================== */}
-      <section
-        className="
-          rounded-xl
-          border border-[var(--border)]
-          bg-[var(--surface)]
-          p-4
-        "
-      >
-        <div className="flex gap-3">
+
+      <section>
+
+        <h2 className="mb-3 text-lg font-semibold">
+          Preparation Status
+        </h2>
+
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+
+          <StatCard
+            title="Total"
+            value={totalQuestions}
+            icon={Target}
+          />
+
+          <StatCard
+            title="Completed"
+            value={completedQuestions}
+            icon={CheckCircle2}
+            className="text-[var(--success)]"
+          />
+
+          <StatCard
+            title="In Progress"
+            value={inProgressQuestions}
+            icon={Circle}
+            className="text-[var(--secondary)]"
+          />
+
+          <StatCard
+            title="Pending"
+            value={pendingQuestions}
+            icon={Circle}
+            className="text-[var(--text-muted)]"
+          />
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          CATEGORY PROGRESS
+      ====================================================== */}
+
+      <section>
+
+        <h2 className="mb-3 text-lg font-semibold">
+          Category Progress
+        </h2>
+
+        <div className="grid gap-4 md:grid-cols-3">
+
+          <CategoryCard
+            title="DSA"
+            icon={Code2}
+            data={dsa}
+          />
+
+          <CategoryCard
+            title="Git & GitHub"
+            icon={GitBranch}
+            data={git}
+          />
+
+          <CategoryCard
+            title="Technical"
+            icon={Laptop}
+            data={technical}
+          />
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          SEARCH
+      ====================================================== */}
+
+      <section>
+
+        <div className="mb-3 flex items-center justify-between">
+
+          <h2 className="text-lg font-semibold">
+            Practice Questions
+          </h2>
+
+          <span className="font-mono text-[10px] text-[var(--text-muted)]">
+            {filteredQuestions.length} results
+          </span>
+
+        </div>
+
+        <div
+          className="
+            flex flex-col gap-3
+            sm:flex-row
+          "
+        >
+
+          {/* SEARCH */}
 
           <div
             className="
-              flex h-9 w-9 shrink-0
-              items-center justify-center
-              rounded-lg
-              bg-[var(--secondary)]/15
-              text-[var(--secondary)]
+              flex flex-1
+              items-center gap-3
+              rounded-xl
+              border border-[var(--border)]
+              bg-[var(--surface)]
+              px-4 py-3
             "
           >
-            <Code2 size={17} />
+
+            <Search
+              size={18}
+              className="text-[var(--text-muted)]"
+            />
+
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search questions..."
+              className="
+                min-w-0 flex-1
+                bg-transparent
+                text-sm
+                outline-none
+                placeholder:text-[var(--text-muted)]
+              "
+            />
+
           </div>
 
-          <div>
-            <p className="font-mono text-[9px] uppercase tracking-wider text-[var(--secondary)]">
-              Interview Mode
-            </p>
+          {/* CATEGORY */}
 
-            <h3 className="mt-1 text-sm font-semibold">
-              Practice like the real interview
+          <select
+            value={selectedCategory}
+            onChange={(e) =>
+              setSelectedCategory(e.target.value)
+            }
+            className="
+              rounded-xl
+              border border-[var(--border)]
+              bg-[var(--surface)]
+              px-4 py-3
+              text-sm
+              text-[var(--text)]
+              outline-none
+            "
+          >
+
+            <option value="All">
+              All Categories
+            </option>
+
+            <option value="DSA">
+              DSA
+            </option>
+
+            <option value="Git">
+              Git
+            </option>
+
+            <option value="Technical">
+              Technical
+            </option>
+
+          </select>
+
+        </div>
+
+      </section>
+
+      {/* =====================================================
+          QUESTION LIST
+      ====================================================== */}
+
+      <section className="space-y-3">
+
+        {filteredQuestions.length > 0 ? (
+          filteredQuestions.map((question) => (
+            <QuestionRow
+              key={question.id}
+              question={question}
+            />
+          ))
+        ) : (
+          <div
+            className="
+              rounded-2xl
+              border border-[var(--border)]
+              bg-[var(--surface)]
+              px-5 py-12
+              text-center
+            "
+          >
+
+            <Search
+              size={32}
+              className="mx-auto text-[var(--text-muted)]"
+            />
+
+            <h3 className="mt-3 font-semibold">
+              No questions found
             </h3>
 
-            <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
-              Start the timer before coding. Avoid looking at
-              solutions and explain your approach before
-              implementation.
+            <p className="mt-1 text-sm text-[var(--text-muted)]">
+              Try changing your search or category.
             </p>
+
           </div>
-        </div>
+        )}
+
       </section>
 
     </div>
@@ -523,185 +589,216 @@ const MachineCoding = () => {
 
 
 /* =========================================================
-   PROJECT CARD
+   STAT CARD
 ========================================================= */
 
-const ProjectCard = ({ project }) => {
-  const statusClasses = {
-    "In Progress":
-      "bg-[var(--secondary)]/15 text-[var(--secondary)]",
-
-    Completed:
-      "bg-[var(--success)]/15 text-[var(--success)]",
-
-    Queued:
-      "bg-[var(--surface-hover)] text-[var(--text-muted)]",
-  };
-
-  const progressColor = {
-    primary: "bg-[var(--primary)]",
-    success: "bg-[var(--success)]",
-    secondary: "bg-[var(--secondary)]",
-  };
-
+const StatCard = ({
+  title,
+  value,
+  icon: Icon,
+  className = "text-[var(--primary)]",
+}) => {
   return (
-    <article
+    <div
       className="
         rounded-xl
         border border-[var(--border)]
         bg-[var(--surface)]
         p-4
-        sm:p-5
       "
     >
-      {/* Top */}
-      <div className="flex items-start justify-between gap-3">
 
-        <div className="flex min-w-0 items-start gap-3">
+      <div className="flex items-center justify-between">
+
+        <span className="font-mono text-[9px] uppercase tracking-wider text-[var(--text-muted)]">
+          {title}
+        </span>
+
+        <Icon
+          size={17}
+          className={className}
+        />
+
+      </div>
+
+      <p className="mt-3 text-2xl font-bold">
+        {value}
+      </p>
+
+    </div>
+  );
+};
+
+
+/* =========================================================
+   CATEGORY CARD
+========================================================= */
+
+const CategoryCard = ({
+  title,
+  icon: Icon,
+  data,
+}) => {
+  return (
+    <div
+      className="
+        rounded-2xl
+        border border-[var(--border)]
+        bg-[var(--surface)]
+        p-5
+      "
+    >
+
+      <div className="flex items-center justify-between">
+
+        <div className="flex items-center gap-3">
 
           <div
             className="
-              flex h-10 w-10 shrink-0
+              flex h-9 w-9
               items-center justify-center
               rounded-lg
               bg-[var(--surface-hover)]
               text-[var(--primary)]
             "
           >
-            <FolderCode size={19} />
+            <Icon size={18} />
           </div>
 
-          <div className="min-w-0">
+          <h3 className="font-semibold">
+            {title}
+          </h3>
 
-            <div className="flex flex-wrap items-center gap-2">
-
-              <h3 className="text-sm font-semibold">
-                {project.title}
-              </h3>
-
-              <span
-                className={`
-                  rounded-full
-                  px-2 py-0.5
-                  font-mono text-[8px]
-                  ${statusClasses[project.status]}
-                `}
-              >
-                {project.status}
-              </span>
-            </div>
-
-            <p className="mt-1 text-xs leading-relaxed text-[var(--text-muted)]">
-              {project.description}
-            </p>
-          </div>
         </div>
 
-        <button
-          type="button"
-          className="
-            flex h-8 w-8 shrink-0
-            items-center justify-center
-            rounded-lg
-            text-[var(--text-muted)]
-            hover:bg-[var(--surface-hover)]
-          "
-        >
-          <MoreVertical size={17} />
-        </button>
+        <span className="font-mono text-xs text-[var(--success)]">
+          {data.percentage}%
+        </span>
+
       </div>
 
-      {/* Tags */}
-      <div className="mt-4 flex flex-wrap gap-1.5">
+      <div className="mt-5 h-2 overflow-hidden rounded-full bg-[var(--surface-hover)]">
+
+        <div
+          className="h-full rounded-full bg-[var(--primary)] transition-all"
+          style={{
+            width: `${data.percentage}%`,
+          }}
+        />
+
+      </div>
+
+      <div className="mt-3 flex items-center justify-between">
+
+        <span className="font-mono text-[9px] text-[var(--text-muted)]">
+          {data.completed} completed
+        </span>
+
+        <span className="font-mono text-[9px] text-[var(--text-muted)]">
+          {data.total} total
+        </span>
+
+      </div>
+
+    </div>
+  );
+};
+
+
+/* =========================================================
+   QUESTION ROW
+========================================================= */
+
+const QuestionRow = ({ question }) => {
+
+  const statusClass = {
+    Completed:
+      "bg-[var(--success)]/15 text-[var(--success)]",
+
+    "In Progress":
+      "bg-[var(--secondary)]/15 text-[var(--secondary)]",
+
+    Pending:
+      "bg-[var(--surface-hover)] text-[var(--text-muted)]",
+  };
+
+  return (
+    <div
+      className="
+        flex flex-col gap-3
+        rounded-xl
+        border border-[var(--border)]
+        bg-[var(--surface)]
+        p-4
+        sm:flex-row
+        sm:items-center
+      "
+    >
+
+      <div
+        className="
+          flex h-9 w-9
+          shrink-0
+          items-center justify-center
+          rounded-lg
+          bg-[var(--surface-hover)]
+        "
+      >
+
+        {question.status === "Completed" ? (
+          <CheckCircle2
+            size={18}
+            className="text-[var(--success)]"
+          />
+        ) : (
+          <Circle
+            size={18}
+            className="text-[var(--text-muted)]"
+          />
+        )}
+
+      </div>
+
+      <div className="min-w-0 flex-1">
+
+        <h3 className="truncate text-sm font-semibold">
+          {question.title}
+        </h3>
+
+        <p className="mt-1 truncate text-xs text-[var(--text-muted)]">
+          {question.description}
+        </p>
+
+      </div>
+
+      <div className="flex items-center gap-2">
 
         <span
           className="
             rounded
-            bg-[var(--bg)]
+            bg-[var(--surface-hover)]
             px-2 py-1
-            font-mono text-[8px]
+            font-mono text-[9px]
             text-[var(--text-muted)]
           "
         >
-          {project.category}
+          {question.category}
         </span>
 
-        {project.tags.map((tag) => (
-          <span
-            key={tag}
-            className="
-              rounded
-              bg-[var(--bg)]
-              px-2 py-1
-              font-mono text-[8px]
-              text-[var(--text-muted)]
-            "
-          >
-            {tag}
-          </span>
-        ))}
-      </div>
-
-      {/* Progress */}
-      <div className="mt-4">
-
-        <div className="mb-1.5 flex items-center justify-between">
-
-          <span className="font-mono text-[9px] text-[var(--text-muted)]">
-            Progress
-          </span>
-
-          <span className="font-mono text-[9px] font-semibold">
-            {project.progress}%
-          </span>
-        </div>
-
-        <div className="h-1.5 overflow-hidden rounded-full bg-[var(--surface-hover)]">
-          <div
-            className={`h-full rounded-full ${progressColor[project.color]}`}
-            style={{
-              width: `${project.progress}%`,
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Footer */}
-      <div className="mt-4 flex flex-col gap-3 border-t border-[var(--border)] pt-3 sm:flex-row sm:items-center sm:justify-between">
-
-        <div className="flex flex-wrap items-center gap-4">
-
-          <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-            <Clock3 size={12} />
-            {project.duration}
-          </span>
-
-          <span className="flex items-center gap-1.5 font-mono text-[9px] text-[var(--text-muted)]">
-            <CalendarDays size={12} />
-            {project.date}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          className="
-            flex items-center gap-1
+        <span
+          className={`
+            rounded
+            px-2 py-1
             font-mono text-[9px]
-            text-[var(--primary)]
-            transition
-            hover:text-[var(--secondary)]
-          "
+            ${statusClass[question.status]}
+          `}
         >
-          {project.status === "Completed"
-            ? "Review Project"
-            : project.status === "Queued"
-            ? "Start Challenge"
-            : "Continue Coding"}
+          {question.status}
+        </span>
 
-          <ArrowUpRight size={12} />
-        </button>
       </div>
-    </article>
+
+    </div>
   );
 };
 
